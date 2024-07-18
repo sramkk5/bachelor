@@ -1,0 +1,48 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {jobname}
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        job: {jobname}
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: {jobname}
+        image: {image}
+        workingDir: /mnt/{workdir}
+        command: 
+        - sleep
+        - 365d
+        securityContext:
+          runAsUser: 1000
+          runAsGroup: 1000
+          runAsNonRoot: true
+          seccompProfile:
+            type: RuntimeDefault
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+        env:
+        - name: 'OMP_NUM_THREADS'
+          value: '{number_of_cores}'
+        resources:
+          requests:
+            cpu: '{number_of_cores}'
+            memory: {memory_size}Gi
+            nvidia.com/{gputype}: {gpus}
+          limits:
+            cpu: '{number_of_cores}'
+            memory: {memory_size}Gi
+            nvidia.com/{gputype}: {gpus}
+        volumeMounts:
+        - name: vol-1
+          mountPath: /mnt
+      volumes:
+      - name: vol-1
+        persistentVolumeClaim:
+          claimName: {pvc}
